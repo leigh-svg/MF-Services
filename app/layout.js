@@ -1,3 +1,4 @@
+import './globals.css'
 export const metadata = { title: 'MF Services Cable Plan Configurator' }
 export default function RootLayout({ children }) {
   return (
