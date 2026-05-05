@@ -1,0 +1,179 @@
+'use client'
+import { useState, useEffect, useCallback } from "react";
+import { generateCablePlanPDF, runComplianceCheck } from "../lib/generateCablePlanPDF";
+
+function Toast({ toasts, dismiss }) {
+  return (
+    <div style={{position:"fixed",bottom:24,right:24,display:"flex",flexDirection:"column",gap:10,zIndex:9999,maxWidth:400}}>
+      {toasts.map((t) => (
+        <div key={t.id} style={{background: t.type==="error"?"#1c0a0a":t.type==="warning"?"#1c1208":"#052e16",border:`1px solid ${t.type==="error"?"#7f1d1d":t.type==="warning"?"#78350f":"#166534"}`,borderRadius:10,padding:"14px 16px",display:"flex",alignItems:"flex-start",gap:12,boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
+          <span style={{fontSize:16,flexShrink:0,paddingTop:1}}>{t.type==="error"?"✕":t.type==="warning"?"⚠":"✓"}</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#f1f5f9",marginBottom:3}}>{t.title}</div>
+            {t.message&&<div style={{fontSize:11,color:"#94a3b8",lineHeight:1.5}}>{t.message}</div>}
+          </div>
+          <button onClick={()=>dismiss(t.id)} style={{background:"none",border:"none",color:"#475569",cursor:"pointer",fontSize:12,padding:0,flexShrink:0}}>✕</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+  const dismiss = useCallback((id) => { setToasts((prev) => prev.filter((t) => t.id !== id)); }, []);
+  const push = useCallback(({ type="error", title, message, duration=6000 }) => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, type, title, message }]);
+    if (duration) setTimeout(() => dismiss(id), duration);
+    return id;
+  }, [dismiss]);
+  return { toasts, push, dismiss };
+}
+
+
+export default function ReviewAndGenerate({ system, componentStates, projectData }) {
+  const { toasts, push, dismiss } = useToast();
+  const [generating, setGenerating] = useState(false);
+  const [failures, setFailures] = useState([]);
+
+  useEffect(() => {
+    if (!system) return;
+    setFailures(runComplianceCheck(system, componentStates));
+  }, [system, componentStates]);
+
+  const handleGeneratePDF = async () => {
+    const currentFailures = runComplianceCheck(system, componentStates);
+    setFailures(currentFailures);
+    if (currentFailures.length > 0) {
+      if (currentFailures.length <= 3) {
+        currentFailures.forEach((f) => { push({ type:"warning", title:`Component ${f.position}: ${f.label}`, message:f.reason, duration:8000 }); });
+      } else {
+        push({ type:"error", title:`${currentFailures.length} compliance issues found`, message:"Please fix all highlighted components before generating.", duration:10000 });
+      }
+      return;
+    }
+    setGenerating(true);
+    try {
+      const { generateCablePlanPDF: genPDF } = await import("../lib/generateCablePlanPDF");
+      const filename = await genPDF({ system, componentStates, projectData });
+      push({ type:"success", title:"PDF Generated Successfully", message:`Saved as: ${filename}`, duration:5000 });
+    } catch (err) {
+      push({ type:"error", title:"PDF Generation Failed", message:err.message||"An unexpected error occurred.", duration:8000 });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  if (!system) return null;
+
+  const allComps = [];
+  system.components.forEach(comp => {
+    allComps.push(comp);
+    if (comp.subComponents) comp.subComponents.forEach(sub => allComps.push(sub));
+  });
+
+  const includedCount = allComps.filter(c => componentStates[c.id]?.included).length;
+
+  return (
+    <>
+      <Toast toasts={toasts} dismiss={dismiss} />
+      <div style={{fontFamily:"'IBM Plex Mono','Courier New',monospace",color:"#e2e8f0"}}>
+        <h2 style={{fontFamily:"'IBM Plex Sans',sans-serif",fontSize:22,fontWeight:700,color:"#f1f5f9",marginBottom:8}}>Review & Generate</h2>
+        <p style={{color:"#64748b",fontSize:14,marginBottom:24}}>Final compliance check before PDF generation.</p>
+
+        <div style={{display:"flex",gap:0,background:"#0a1628",border:"1px solid #1e3a5f",borderRadius:10,overflow:"hidden",marginBottom:24}}>
+          <div style={{flex:1,padding:"12px 16px",borderRight:"1px solid #1e3a5f"}}>
+            <div style={{fontSize:10,color:"#64748b",textTransform:"uppercase",marginBottom:4}}>System</div>
+            <div style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>{system.name}</div>
+          </div>
+          <div style={{flex:1,padding:"12px 16px",borderRight:"1px solid #1e3a5f"}}>
+            <div style={{fontSize:10,color:"#64748b",textTransform:"uppercase",marginBottom:4}}>Leaf Type</div>
+            <div style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>{system.leafType}</div>
+          </div>
+          <div style={{flex:1,padding:"12px 16px",borderRight:"1px solid #1e3a5f"}}>
+            <div style={{fontSize:10,color:"#64748b",textTransform:"uppercase",marginBottom:4}}>Fire Door</div>
+            <div style={{fontSize:14,fontWeight:700,color:system.isFireDoor?"#fca5a5":"#4ade80"}}>{system.isFireDoor?"YES":"No"}</div>
+          </div>
+          <div style={{flex:1,padding:"12px 16px"}}>
+            <div style={{fontSize:10,color:"#64748b",textTransform:"uppercase",marginBottom:4}}>Components</div>
+            <div style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>{includedCount} included</div>
+          </div>
+        </div>
+
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#3b82f6",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:12,fontWeight:700}}>Compliance Check</div>
+          {failures.length===0 ? (
+            <div style={{background:"#052e16",border:"1px solid #166534",borderRadius:10,padding:"16px 20px",display:"flex",alignItems:"center",gap:14}}>
+              <div style={{fontSize:24,color:"#4ade80"}}>✓</div>
+              <div>
+                <div style={{fontSize:15,fontWeight:700,color:"#4ade80",marginBottom:3}}>Compliance Check Passed</div>
+                <div style={{fontSize:12,color:"#86efac"}}>All mandatory fields completed. Ready to generate PDF.</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{background:"#1c0a0a",border:"1px solid #7f1d1d",borderRadius:10,overflow:"hidden"}}>
+              <div style={{padding:"16px 20px",display:"flex",alignItems:"flex-start",gap:14,borderBottom:"1px solid #7f1d1d"}}>
+                <span style={{fontSize:24,color:"#fca5a5"}}>⚠</span>
+                <div>
+                  <div style={{fontSize:15,fontWeight:700,color:"#fca5a5",marginBottom:3}}>Compliance Check Failed</div>
+                  <div style={{fontSize:12,color:"#f87171"}}>{failures.length} issue{failures.length>1?"s":""} must be resolved</div>
+                </div>
+              </div>
+              <div style={{padding:"12px 20px"}}>
+                {failures.map((f,i) => (
+                  <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:10}}>
+                    <span style={{background:"#7f1d1d",color:"#fca5a5",borderRadius:4,padding:"2px 8px",fontSize:11,fontWeight:700,flexShrink:0}}>{f.position}</span>
+                    <div>
+                      <div style={{fontSize:13,color:"#fca5a5",marginBottom:2}}>{f.label}</div>
+                      <div style={{fontSize:11,color:"#f87171"}}>{f.reason}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11,color:"#3b82f6",letterSpacing:"0.1em",textTransform:"uppercase",marginBottom:12,fontWeight:700}}>Selected Components</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {allComps.map(comp => {
+              const state = componentStates[comp.id];
+              if (!state?.included) return null;
+              const cable = state.isOther?`Other: ${state.otherValue||"(unspecified)"}`:state.selectedCable;
+              const hasFail = failures.some(f=>f.id===comp.id);
+              const isMandatory = comp.mandatory||(comp.conditions?.some(c=>system[c.if?.property]===c.if?.equals&&c.then?.mandatory)??false);
+              return (
+                <div key={comp.id} style={{background:"#0a1628",borderRadius:8,padding:"12px 16px",borderLeft:`3px solid ${hasFail?"#f59e0b":isMandatory?"#dc2626":"#1e3a5f"}`}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                    <div style={{display:"flex",gap:12}}>
+                      <span style={{fontSize:13,fontWeight:700,color:isMandatory?"#fca5a5":"#60a5fa"}}>{comp.position}</span>
+                      <div>
+                        <div style={{fontSize:14,color:"#cbd5e1",marginBottom:3}}>{comp.label}</div>
+                        <div style={{fontSize:11,color:"#60a5fa",fontFamily:"monospace"}}>{cable}</div>
+                        {state.userRemarks&&<div style={{fontSize:11,color:"#94a3b8",marginTop:3}}>Note: {state.userRemarks}</div>}
+                        {hasFail&&<div style={{fontSize:11,color:"#fbbf24",marginTop:4}}>⚠ {failures.find(f=>f.id===comp.id)?.reason}</div>}
+                      </div>
+                    </div>
+                    {isMandatory&&<span style={{background:"#450a0a",color:"#fca5a5",borderRadius:4,padding:"2px 6px",fontSize:9,fontWeight:700}}>REQUIRED</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{paddingTop:24,borderTop:"1px solid #1e293b"}}>
+          <button
+            onClick={handleGeneratePDF}
+            disabled={generating}
+            style={{width:"100%",padding:"18px 24px",border:"none",borderRadius:10,fontSize:16,fontWeight:700,color:"#fff",fontFamily:"'IBM Plex Sans',sans-serif",cursor:generating?"wait":"pointer",background:failures.length>0?"#374151":generating?"#1d4ed8":"linear-gradient(135deg,#1d4ed8 0%,#2563eb 100%)"}}>
+            {generating?"Generating PDF...":failures.length>0?`Fix ${failures.length} issue${failures.length>1?"s":""} to unlock PDF`:"Download Cable Plan PDF"}
+          </button>
+          {failures.length===0&&!generating&&<p style={{textAlign:"center",color:"#64748b",fontSize:12,marginTop:12}}>PDF will include project metadata, cable diagram, and component table.</p>}
+        </div>
+      </div>
+    </>
+  );
+}

@@ -1,118 +1,36 @@
 'use client'
 import { useState, useCallback } from "react";
-
-// ─── DATA ────────────────────────────────────────────────────────────────────
+import ReviewAndGenerate from "./ReviewAndGenerate";
 
 const SYSTEMS = {
   "ets64r-single": {
-    id: "ets64r-single",
-    name: "ETS 64-R",
-    leafType: "single-leaf",
-    isFireDoor: true,
-    systemVariant: "ETS-64-R",
+    id: "ets64r-single", name: "ETS 64-R", leafType: "single-leaf", isFireDoor: true, systemVariant: "ETS-64-R",
     components: [
-      {
-        id: "comp-1", position: "1", label: "Voltage supply",
-        type: "power_supply", mandatory: true,
-        cable: { defaultCable: "NYM 3 x 1.5 mm²", allowedCables: ["NYM 3 x 1.5 mm²"], allowOther: true },
-        remarks: "Motor must be supplied with 230 V",
-      },
-      {
-        id: "comp-2", position: "2", label: "24 V DC E-opener, 100% ED, Protective diode",
-        type: "e_opener", mandatory: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "",
-      },
-      {
-        id: "comp-3", position: "3", label: "Bolt switch contact",
-        type: "bolt_switch", mandatory: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "",
-      },
-      {
-        id: "comp-4", position: "4", label: "Concealed cable connection",
-        type: "cable_transition", mandatory: false, optional: true,
-        cable: { defaultCable: "(integrated)", allowedCables: [], allowOther: false },
-        remarks: "Optional, in building",
-      },
-      {
-        id: "comp-5", position: "5", label: "Flatscan set",
-        type: "sensor_strip", mandatory: true,
-        cable: { defaultCable: "Cables through ECO", allowedCables: ["Cables through ECO"], allowOther: true },
-        remarks: "Concealed cable laying in building, otherwise surface-mounted",
-        subComponents: [
-          {
-            id: "comp-5-1", position: "5.1", label: "Sensor strips set",
-            type: "sensor_strip", mandatory: true,
-            cable: { defaultCable: "Cables through ECO", allowedCables: ["Cables through ECO"], allowOther: true },
-            remarks: "Concealed cable laying in building, otherwise surface-mounted",
-          },
-        ],
-      },
-      {
-        id: "comp-6", position: "6", label: "Flip switch (inside)",
-        type: "flip_switch", mandatory: false, optional: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "In-wall socket, cable laying in building",
-        subComponents: [
-          {
-            id: "comp-6-1", position: "6.1", label: "Flip switch (outside)",
-            type: "flip_switch", mandatory: false, optional: true,
-            cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-            remarks: "In-wall socket, cable laying in building",
-          },
-        ],
-      },
-      {
-        id: "comp-7", position: "7", label: "Radar (inside) e.g. BS – 50cm above hinges",
-        type: "radar_sensor", mandatory: false, optional: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "Cable laying in building (in-wall if necessary)",
-        subComponents: [
-          {
-            id: "comp-7-1", position: "7.1", label: "Radar (outside) e.g. BGS – centre of door",
-            type: "radar_sensor", mandatory: false, optional: true,
-            cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-            remarks: "Cable laying in building (in-wall if necessary)",
-          },
-        ],
-      },
-      {
-        id: "comp-8", position: "8", label: "Bedix program selection switch",
-        type: "program_switch", mandatory: false, optional: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "In-wall socket, cable laying in building",
-      },
-      {
-        id: "comp-9", position: "9", label: "'Close door' manual release button",
-        type: "manual_release_button", mandatory: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "Cable laying in building (in-wall if necessary); button outside the door's pivot range",
-        conditions: [{ if: { property: "isFireDoor", equals: true }, then: { mandatory: true, remarksOverride: "⚠ Mandatory per DIGt approval. Button must be outside the door's pivot range." } }],
-      },
-      {
-        id: "comp-11", position: "11", label: "Ceiling smoke detector",
-        type: "smoke_detector", mandatory: false, optional: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "Cable laying in building as per approval",
-      },
-      {
-        id: "comp-12", position: "12", label: "Lintel-mounted smoke detector",
-        type: "smoke_detector", mandatory: false, optional: true,
-        cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true },
-        remarks: "Cable laying in building as per approval",
-      },
+      { id: "comp-1", position: "1", label: "Voltage supply", type: "power_supply", mandatory: true, cable: { defaultCable: "NYM 3 x 1.5 mm²", allowedCables: ["NYM 3 x 1.5 mm²"], allowOther: true }, remarks: "Motor must be supplied with 230 V" },
+      { id: "comp-2", position: "2", label: "24 V DC E-opener, 100% ED, Protective diode", type: "e_opener", mandatory: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "" },
+      { id: "comp-3", position: "3", label: "Bolt switch contact", type: "bolt_switch", mandatory: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "" },
+      { id: "comp-4", position: "4", label: "Concealed cable connection", type: "cable_transition", mandatory: false, optional: true, cable: { defaultCable: "(integrated)", allowedCables: [], allowOther: false }, remarks: "Optional, in building" },
+      { id: "comp-5", position: "5", label: "Flatscan set", type: "sensor_strip", mandatory: true, cable: { defaultCable: "Cables through ECO", allowedCables: ["Cables through ECO"], allowOther: true }, remarks: "Concealed cable laying in building, otherwise surface-mounted", subComponents: [
+        { id: "comp-5-1", position: "5.1", label: "Sensor strips set", type: "sensor_strip", mandatory: true, cable: { defaultCable: "Cables through ECO", allowedCables: ["Cables through ECO"], allowOther: true }, remarks: "Concealed cable laying in building, otherwise surface-mounted" }
+      ]},
+      { id: "comp-6", position: "6", label: "Flip switch (inside)", type: "flip_switch", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "In-wall socket, cable laying in building", subComponents: [
+        { id: "comp-6-1", position: "6.1", label: "Flip switch (outside)", type: "flip_switch", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "In-wall socket, cable laying in building" }
+      ]},
+      { id: "comp-7", position: "7", label: "Radar (inside) e.g. BS - 50cm above hinges", type: "radar_sensor", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "Cable laying in building (in-wall if necessary)", subComponents: [
+        { id: "comp-7-1", position: "7.1", label: "Radar (outside) e.g. BGS - centre of door", type: "radar_sensor", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "Cable laying in building (in-wall if necessary)" }
+      ]},
+      { id: "comp-8", position: "8", label: "Bedix program selection switch", type: "program_switch", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.6 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.6 mm²", "J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "In-wall socket, cable laying in building" },
+      { id: "comp-9", position: "9", label: "'Close door' manual release button", type: "manual_release_button", mandatory: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "Cable laying in building; button outside the door's pivot range", conditions: [{ if: { property: "isFireDoor", equals: true }, then: { mandatory: true, remarksOverride: "Mandatory per DIGt approval. Button must be outside the door's pivot range." } }] },
+      { id: "comp-11", position: "11", label: "Ceiling smoke detector", type: "smoke_detector", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "Cable laying in building as per approval" },
+      { id: "comp-12", position: "12", label: "Lintel-mounted smoke detector", type: "smoke_detector", mandatory: false, optional: true, cable: { defaultCable: "J-Y(ST)Y 4 x 0.8 mm²", allowedCables: ["J-Y(ST)Y 4 x 0.8 mm²"], allowOther: true }, remarks: "Cable laying in building as per approval" },
     ],
   },
 };
 
 const TYPE_ICONS = {
-  power_supply: "⚡", e_opener: "🔓", bolt_switch: "🔘",
-  cable_transition: "🔌", sensor_strip: "📡", flip_switch: "🔀",
-  radar_sensor: "📻", program_switch: "⚙️", manual_release_button: "🚨",
-  smoke_detector: "🔥", door_closer: "🚪", signal_lamp: "💡",
-  radio_receiver: "📶", fire_alarm_system: "🚒", door_coordinator: "🔗",
-  operating_element: "🎛️", anchor_plate: "⚓", magnetic_clamp: "🧲",
+  power_supply: "⚡", e_opener: "🔓", bolt_switch: "🔘", cable_transition: "🔌",
+  sensor_strip: "📡", flip_switch: "🔀", radar_sensor: "📻", program_switch: "⚙️",
+  manual_release_button: "🚨", smoke_detector: "🔥", door_closer: "🚪",
 };
 
 function validateConfiguration(system, componentStates) {
@@ -123,7 +41,7 @@ function validateConfiguration(system, componentStates) {
     const state = componentStates[comp.id];
     if (!state) return;
     let isMandatory = comp.mandatory;
-    if (comp.conditions) comp.conditions.forEach((condition) => { if (system[condition.if.property] === condition.if.equals) { if (condition.then.mandatory !== undefined) isMandatory = condition.then.mandatory; } });
+    if (comp.conditions) comp.conditions.forEach((condition) => { if (system[condition.if.property] === condition.if.equals && condition.then.mandatory !== undefined) isMandatory = condition.then.mandatory; });
     if (isMandatory && !state.included) errors.push({ id: comp.id, message: `"${comp.label}" is mandatory and cannot be removed.` });
     if (state.included && !state.selectedCable && comp.cable.allowedCables.length > 0) warnings.push({ id: comp.id, message: `"${comp.label}" has no cable selected.` });
   });
@@ -255,7 +173,6 @@ export default function CablePlanConfigurator() {
   const [projectData, setProjectData] = useState({ constructionProject: "", doorNumberOrNaming: "", installationLocation: "", positionNumberInSpec: "", functionDescription: "", miscellaneous: "" });
   const system = selectedSystemId ? SYSTEMS[selectedSystemId] : null;
   const validation = system ? validateConfiguration(system, componentStates) : { errors: [], warnings: [], isValid: true };
-
   const handleSelectSystem = (id) => { setSelectedSystemId(id); setComponentStates(buildInitialState(SYSTEMS[id])); };
   const handleStateChange = useCallback((compId, updates) => { setComponentStates((prev) => ({ ...prev, [compId]: { ...prev[compId], ...updates } })); }, []);
   const handleNext = () => { if (currentStep === 1 && !validation.isValid) return; setCurrentStep((s) => Math.min(s + 1, STEPS.length - 1)); };
@@ -322,23 +239,11 @@ export default function CablePlanConfigurator() {
           </div>
         )}
         {currentStep === 3 && system && (
-          <div style={styles.stepContent}>
-            <h2 style={styles.stepTitle}>Review Configuration</h2>
-            <p style={styles.stepDesc}>Check your final configuration before generating the PDF.</p>
-            <div style={styles.reviewCard}>
-              <div style={styles.reviewSection}>
-                <div style={styles.reviewSectionTitle}>System</div>
-                <div style={styles.reviewRow}><span>Name</span><strong>{system.name}</strong></div>
-                <div style={styles.reviewRow}><span>Leaf Type</span><strong>{system.leafType}</strong></div>
-                <div style={styles.reviewRow}><span>Fire Door</span><strong>{system.isFireDoor ? "Yes" : "No"}</strong></div>
-              </div>
-              <div style={styles.reviewSection}>
-                <div style={styles.reviewSectionTitle}>Components</div>
-                {system.components.map((comp) => { const state = componentStates[comp.id]; if (!state?.included) return null; const cable = state.isOther ? `Other: ${state.otherValue}` : state.selectedCable; return (<div key={comp.id} style={styles.reviewComponentRow}><span style={styles.reviewPos}>{comp.position}</span><span style={styles.reviewCompLabel}>{comp.label}</span><span style={styles.reviewCable}>{cable}</span></div>); })}
-              </div>
-            </div>
-            <button style={styles.pdfButton}>⬇ Generate PDF</button>
-          </div>
+          <ReviewAndGenerate
+            system={system}
+            componentStates={componentStates}
+            projectData={projectData}
+          />
         )}
         <div style={styles.navRow}>
           <button onClick={handleBack} disabled={currentStep === 0} style={{ ...styles.navBtn, ...styles.navBtnBack, opacity: currentStep === 0 ? 0.3 : 1 }}>← Previous</button>
@@ -410,15 +315,6 @@ const styles = {
   formField: { display: "flex", flexDirection: "column", gap: 6 },
   formLabel: { fontSize: 11, color: "#64748b", letterSpacing: "0.06em", textTransform: "uppercase" },
   formInput: { background: "#0a1628", border: "1px solid #1e293b", borderRadius: 8, padding: "10px 14px", color: "#e2e8f0", fontSize: 14, fontFamily: "'IBM Plex Sans', sans-serif", outline: "none" },
-  reviewCard: { background: "#0a1628", border: "1px solid #1e293b", borderRadius: 12, overflow: "hidden", marginBottom: 24 },
-  reviewSection: { padding: "20px 24px", borderBottom: "1px solid #1e293b" },
-  reviewSectionTitle: { fontSize: 11, color: "#3b82f6", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14, fontWeight: 700 },
-  reviewRow: { display: "flex", justifyContent: "space-between", fontSize: 14, color: "#94a3b8", marginBottom: 8 },
-  reviewComponentRow: { display: "flex", alignItems: "center", gap: 12, marginBottom: 10, fontSize: 13 },
-  reviewPos: { background: "#1e3a5f", borderRadius: 4, padding: "2px 8px", color: "#60a5fa", fontSize: 11, fontFamily: "'IBM Plex Mono', monospace", minWidth: 28, textAlign: "center", flexShrink: 0 },
-  reviewCompLabel: { color: "#cbd5e1", flex: 1 },
-  reviewCable: { color: "#60a5fa", fontFamily: "'IBM Plex Mono', monospace", fontSize: 11 },
-  pdfButton: { background: "#1d4ed8", color: "#fff", border: "none", borderRadius: 8, padding: "14px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'IBM Plex Sans', sans-serif", letterSpacing: "-0.01em", width: "100%" },
   navRow: { display: "flex", justifyContent: "space-between", marginTop: 32, paddingTop: 24, borderTop: "1px solid #1e293b" },
   navBtn: { borderRadius: 8, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer", border: "none", fontFamily: "'IBM Plex Sans', sans-serif", transition: "opacity 0.2s" },
   navBtnBack: { background: "#1e293b", color: "#94a3b8" },
