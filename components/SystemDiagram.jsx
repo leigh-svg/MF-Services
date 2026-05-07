@@ -1,6 +1,8 @@
 'use client'
 
-export function ETS64RDiagram() {
+export function ETS64RDiagram({ system, componentStates }) {
+  // system and componentStates are available for future enhancements
+  // (e.g., highlighting included/excluded components)
   return (
     <svg viewBox="0 0 680 320" width="100%" height="auto" style={{ maxWidth: 800, margin: "0 auto" }} role="img" aria-label="ETS 64-R Single Leaf Fire Door System Diagram">
       <defs>

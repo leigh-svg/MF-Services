@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import ReviewAndGenerate from "./ReviewAndGenerate";
 import WiringDiagram from "./WiringDiagram";
+import { ETS64RDiagram } from "./SystemDiagram";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const T = {
@@ -360,6 +361,9 @@ export default function CablePlanConfigurator() {
             {/* Bento grid */}
              <div style={{ marginBottom: 28 }}>
   <WiringDiagram system={system} componentStates={componentStates} />
+</div>
+            <div style={{ marginBottom: 28 }}>
+  <ETS64RDiagram system={system} componentStates={componentStates} />
 </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {system.components.map((comp, i) => (
