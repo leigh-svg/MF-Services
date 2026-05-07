@@ -302,7 +302,7 @@ export default function CablePlanConfigurator() {
       <header style={{ background: T.navy, borderBottom: `3px solid ${T.orange}`, padding: "0 32px", position: "sticky", top: 0, zIndex: 100, boxShadow: shadow.md }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <img src="/linkedin.jpg" alt="MF Services" style={{ height: 36, width: "auto", mixBlendMode: "screen", filter: "brightness(0) invert(1)" }} />
+            <img src="/linkedin.jpg" alt="MF Services" style={{ height: 40, width: "auto", borderRadius: 4, background: "#ffffff" }} />
             <div>
               <div style={{ fontWeight: 700, fontSize: 16, color: T.white, letterSpacing: "-0.02em", lineHeight: 1.2 }}>Cable Plan Configurator</div>
               <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>MF Services — Door Systems</div>
