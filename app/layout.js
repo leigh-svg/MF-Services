@@ -1,5 +1,5 @@
 import './globals.css'
-export const metadata = { title: 'MF Services Cable Plan Configurator' }
+export const metadata = { title: 'MF Services Cable Plan Configurator', viewport: 'width=device-width, initial-scale=1' }
 export default function RootLayout({ children }) {
   return (
     <html lang="en">

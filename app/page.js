@@ -12,8 +12,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('hardwareSpec')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F9FA', color: '#0F1C2E', fontFamily: 'DM Sans, sans-serif' }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 32px' }}>
+    <div className="mf-page-shell" style={{ minHeight: '100vh', background: '#F8F9FA', color: '#0F1C2E', fontFamily: 'DM Sans, sans-serif' }}>
+      <div className="mf-page-container" style={{ maxWidth: 1000, margin: '0 auto', padding: '24px 32px' }}>
         <div style={{ display: 'flex', gap: 12, marginBottom: 24, background: '#FFFFFF', borderRadius: 16, padding: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
           {TABS.map(tab => (
             <button

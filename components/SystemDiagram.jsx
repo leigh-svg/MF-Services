@@ -4,7 +4,8 @@ export function ETS64RDiagram({ system, componentStates }) {
   // system and componentStates are available for future enhancements
   // (e.g., highlighting included/excluded components)
   return (
-    <svg viewBox="0 0 760 320" width="100%" height="auto" style={{ maxWidth: 800, margin: "0 auto" }} role="img" aria-label="ETS 64-R Single Leaf Fire Door System Diagram">\n
+    <svg viewBox="0 0 760 320" preserveAspectRatio="xMidYMid meet" width="100%" height="auto" style={{ maxWidth: 800, margin: "0 auto", minHeight: 300 }} role="img" aria-label="ETS 64-R Single Leaf Fire Door System Diagram">
+
       <defs>
         <marker id="cableArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
           <path d="M0,0 L0,6 L9,3 z" fill="#1470B1" />

@@ -256,11 +256,11 @@ const STEPS = ["Select System", "Configure Components", "Project Details", "Revi
 
 function StepIndicator({ currentStep, setCurrentStep }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", marginBottom: 40 }}>
+    <div className="mf-step-indicator" style={{ display: "flex", alignItems: "center", marginBottom: 40, overflowX: "auto" }}>
       {STEPS.map((label, i) => (
-        <div key={i} onClick={i < currentStep ? () => setCurrentStep(i) : undefined} style={{ display: "flex", alignItems: "center", flex: 1, cursor: i < currentStep ? "pointer" : "default" }}>
+        <div key={i} className={`mf-step-item${i === currentStep ? ' mf-step-current' : ''}`} onClick={i < currentStep ? () => setCurrentStep(i) : undefined} style={{ display: "flex", alignItems: "center", flex: 1, cursor: i < currentStep ? "pointer" : "default" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{
+            <div className="mf-step-circle" style={{
               width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 13, fontWeight: 700, flexShrink: 0, transition: "all 250ms",
               background: i < currentStep ? T.green : i === currentStep ? T.navy : T.surface,
@@ -270,10 +270,10 @@ function StepIndicator({ currentStep, setCurrentStep }) {
             }}>
               {i < currentStep ? "✓" : i + 1}
             </div>
-            <span style={{ fontSize: 12, fontWeight: i === currentStep ? 600 : 400, color: i === currentStep ? T.textPrimary : T.textMuted, whiteSpace: "nowrap" }}>{label}</span>
+            <span className="mf-step-label" style={{ fontSize: 12, fontWeight: i === currentStep ? 600 : 400, color: i === currentStep ? T.textPrimary : T.textMuted, whiteSpace: "nowrap" }}>{label}</span>
           </div>
           {i < STEPS.length - 1 && (
-            <div style={{ flex: 1, height: 2, margin: "0 12px", background: i < currentStep ? T.green : T.border, borderRadius: 1, transition: "background 250ms" }} />
+            <div className="mf-step-connector" style={{ flex: 1, height: 2, margin: "0 12px", background: i < currentStep ? T.green : T.border, borderRadius: 1, transition: "background 250ms" }} />
           )}
         </div>
       ))}
@@ -300,13 +300,13 @@ export default function CablePlanConfigurator() {
     <div style={{ minHeight: "100vh", background: T.canvas, fontFamily: "DM Sans, sans-serif", color: T.textBody }}>
 
       {/* ── HEADER ── */}
-      <header style={{ background: T.navy, borderBottom: `3px solid ${T.orange}`, padding: "0 32px", position: "sticky", top: 0, zIndex: 100, boxShadow: shadow.md }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <header className="mf-app-header" style={{ background: T.navy, borderBottom: `3px solid ${T.orange}`, padding: "0 32px", position: "sticky", top: 0, zIndex: 100, boxShadow: shadow.md }}>
+        <div className="mf-header-inner" style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64, gap: 16 }}>
+          <div className="mf-header-row" style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <img src="/linkedin.jpg" alt="MF Services" style={{ height: 40, width: "auto", borderRadius: 4, background: "#ffffff" }} />
             <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: T.white, letterSpacing: "-0.02em", lineHeight: 1.2 }}>Cable Plan Configurator</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>MF Services — Door Systems</div>
+              <div className="mf-header-title" style={{ fontWeight: 700, fontSize: 16, color: T.white, letterSpacing: "-0.02em", lineHeight: 1.2, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Cable Plan Configurator</div>
+              <div className="mf-header-subtitle" style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em" }}>MF Services — Door Systems</div>
             </div>
           </div>
           {system && (
@@ -323,7 +323,7 @@ export default function CablePlanConfigurator() {
       </header>
 
       {/* ── BODY ── */}
-      <main style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 32px" }}>
+      <main className="mf-content-shell" style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 32px" }}>
         <StepIndicator currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
         {/* STEP 0: Select System */}
