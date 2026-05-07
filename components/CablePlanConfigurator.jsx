@@ -332,12 +332,12 @@ export default function CablePlanConfigurator() {
             <h1 style={{ fontSize: 28, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.03em", marginBottom: 6 }}>Select Door System</h1>
             <p style={{ color: T.textMuted, fontSize: 15, marginBottom: 32 }}>Choose the system you are configuring the cable plan for.</p>
           
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }}>
               {Object.values(SYSTEMS).map(sys => (
                 <div key={sys.id} onClick={() => handleSelectSystem(sys.id)}
-                  style={{ background: T.surface, border: `2px solid ${selectedSystemId === sys.id ? T.blue : T.border}`, borderRadius: 14, padding: 24, cursor: "pointer", transition: "all 200ms", boxShadow: selectedSystemId === sys.id ? `0 0 0 4px rgba(20,112,177,0.12), ${shadow.md}` : shadow.sm }}>
+                  style={{ background: T.surface, border: `2px solid ${selectedSystemId === sys.id ? T.blue : T.border}`, borderRadius: 14, padding: 24, cursor: "pointer", transition: "all 200ms", boxShadow: selectedSystemId === sys.id ? `0 0 0 4px rgba(20,112,177,0.12), ${shadow.md}` : shadow.sm, minWidth: 400 }}>
                   {sys.id === "ets64r-single" && (
-                    <div style={{ marginBottom: 16 }}>
+                    <div style={{ marginBottom: 20, padding: 16, background: T.surface2, borderRadius: 12, minHeight: 280, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <ETS64RDiagram system={sys} componentStates={{}} />
                     </div>
                   )}
