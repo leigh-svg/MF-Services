@@ -253,11 +253,11 @@ function ValidationPanel({ validation }) {
 // ─── STEP INDICATOR ───────────────────────────────────────────────────────────
 const STEPS = ["Select System", "Configure Components", "Project Details", "Review"];
 
-function StepIndicator({ currentStep }) {
+function StepIndicator({ currentStep, setCurrentStep }) {
   return (
     <div style={{ display: "flex", alignItems: "center", marginBottom: 40 }}>
       {STEPS.map((label, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+        <div key={i} onClick={i < currentStep ? () => setCurrentStep(i) : undefined} style={{ display: "flex", alignItems: "center", flex: 1, cursor: i < currentStep ? "pointer" : "default" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{
               width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
@@ -323,7 +323,7 @@ export default function CablePlanConfigurator() {
 
       {/* ── BODY ── */}
       <main style={{ maxWidth: 1000, margin: "0 auto", padding: "40px 32px" }}>
-        <StepIndicator currentStep={currentStep} />
+        <StepIndicator currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
         {/* STEP 0: Select System */}
         {currentStep === 0 && (
