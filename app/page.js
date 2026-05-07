@@ -4,12 +4,12 @@ import CablePlanConfigurator from '../components/CablePlanConfigurator'
 import SpecGenerator from '../components/SpecGenerator'
 
 const TABS = [
-  { id: 'cablePlan', label: 'Cable Plan' },
   { id: 'hardwareSpec', label: 'Hardware Spec' },
+  { id: 'cablePlan', label: 'Cable Plan' },
 ]
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('cablePlan')
+  const [activeTab, setActiveTab] = useState('hardwareSpec')
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8F9FA', color: '#0F1C2E', fontFamily: 'DM Sans, sans-serif' }}>
@@ -39,7 +39,7 @@ export default function Home() {
         </div>
 
         <div style={{ background: '#FFFFFF', borderRadius: 20, boxShadow: '0 10px 30px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-          {activeTab === 'cablePlan' ? <CablePlanConfigurator /> : <SpecGenerator />}
+          {activeTab === 'hardwareSpec' ? <SpecGenerator /> : <CablePlanConfigurator />}
         </div>
       </div>
     </div>
