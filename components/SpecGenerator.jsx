@@ -96,25 +96,47 @@ function generateSpecPDF(doorType, hardwareSelections, projectData) {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  if (hardwareSelections.closer) {
-    const closer = hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer);
-    const variant = hardwareSelections.closerVariant ? closer.variants.find(v => v.id === hardwareSelections.closerVariant) : null;
-    doc.text(`Door Closer: ${closer.label}${variant ? ` (${variant.label})` : ''}`, margin, y);
-    y += 6;
-    if (variant) {
-      doc.text(`Article No: ${variant.articleNo}`, margin + 10, y);
+  
+  if (doorType.id === "automatic-sliding") {
+    // LEANA hardware display
+    if (hardwareSelections.glazingOption) {
+      const glazing = doorType.glazingOptions.find(g => g.id === hardwareSelections.glazingOption);
+      doc.text(`Glazing Option: ${glazing.label}`, margin, y);
       y += 6;
     }
-  }
-  if (hardwareSelections.leverHandle) {
-    const handle = hardwareData.hardware.leverHandles.find(h => h.id === hardwareSelections.leverHandle);
-    doc.text(`Lever Handle: ${handle.label}`, margin, y);
-    y += 6;
-  }
-  if (hardwareSelections.panicHardware) {
-    const panic = hardwareData.hardware.panicHardware.find(p => p.id === hardwareSelections.panicHardware);
-    doc.text(`Panic Hardware: ${panic.label}`, margin, y);
-    y += 6;
+    if (hardwareSelections.leanaOptions && hardwareSelections.leanaOptions.length > 0) {
+      doc.text("LEANA Options:", margin, y);
+      y += 6;
+      hardwareSelections.leanaOptions.forEach(optId => {
+        const opt = doorType.options.find(o => o.id === optId);
+        if (opt) {
+          doc.text(`• ${opt.label}`, margin + 5, y);
+          y += 6;
+        }
+      });
+    }
+  } else {
+    // Traditional hardware display
+    if (hardwareSelections.closer) {
+      const closer = hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer);
+      const variant = hardwareSelections.closerVariant ? closer.variants.find(v => v.id === hardwareSelections.closerVariant) : null;
+      doc.text(`Door Closer: ${closer.label}${variant ? ` (${variant.label})` : ''}`, margin, y);
+      y += 6;
+      if (variant) {
+        doc.text(`Article No: ${variant.articleNo}`, margin + 10, y);
+        y += 6;
+      }
+    }
+    if (hardwareSelections.leverHandle) {
+      const handle = hardwareData.hardware.leverHandles.find(h => h.id === hardwareSelections.leverHandle);
+      doc.text(`Lever Handle: ${handle.label}`, margin, y);
+      y += 6;
+    }
+    if (hardwareSelections.panicHardware) {
+      const panic = hardwareData.hardware.panicHardware.find(p => p.id === hardwareSelections.panicHardware);
+      doc.text(`Panic Hardware: ${panic.label}`, margin, y);
+      y += 6;
+    }
   }
   y += 10;
 
@@ -242,69 +264,116 @@ export default function SpecGenerator() {
               </div>
             </div>
             <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 14, padding: 32, boxShadow: shadow.sm }}>
-              {/* Door Closer */}
-              <div style={{ marginBottom: 32 }}>
-                <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Door Closer</label>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: T.textMuted, display: "block", marginBottom: 8 }}>Model</label>
-                    <select value={hardwareSelections.closer || doorType.recommendedCloser || ""} onChange={e => handleHardwareChange("closer", e.target.value)}
+              {/* LEANA-specific configuration for automatic-sliding doors */}
+              {doorType.id === "automatic-sliding" ? (
+                <>
+                  {/* Glazing Options */}
+                  <div style={{ marginBottom: 32 }}>
+                    <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Glazing Option</label>
+                    <select value={hardwareSelections.glazingOption || ""} onChange={e => handleHardwareChange("glazingOption", e.target.value)}
                       style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
                       onFocus={e => e.target.style.borderColor = T.blue}
                       onBlur={e => e.target.style.borderColor = T.border}
                     >
-                      <option value="">Select Closer</option>
-                      {hardwareData.hardware.doorClosers.map(c => (
-                        <option key={c.id} value={c.id}>{c.label}</option>
+                      <option value="">Select Glazing Option</option>
+                      {doorType.glazingOptions?.map(g => (
+                        <option key={g.id} value={g.id}>{g.label}</option>
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: T.textMuted, display: "block", marginBottom: 8 }}>Variant</label>
-                    <select value={hardwareSelections.closerVariant || ""} onChange={e => handleHardwareChange("closerVariant", e.target.value)}
+
+                  {/* LEANA Options */}
+                  <div style={{ marginBottom: 32 }}>
+                    <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>LEANA Options</label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      {doorType.options?.map(opt => (
+                        <label key={opt.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={(hardwareSelections.leanaOptions || []).includes(opt.id)}
+                            onChange={e => {
+                              const current = hardwareSelections.leanaOptions || [];
+                              const updated = e.target.checked ? [...current, opt.id] : current.filter(id => id !== opt.id);
+                              handleHardwareChange("leanaOptions", updated);
+                            }}
+                            style={{ marginTop: 2, cursor: "pointer", width: 18, height: 18 }}
+                          />
+                          <div>
+                            <div style={{ fontSize: 14, color: T.textPrimary, fontWeight: 500 }}>{opt.label}</div>
+                            {opt.description && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{opt.description}</div>}
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Door Closer */}
+                  <div style={{ marginBottom: 32 }}>
+                    <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Door Closer</label>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: T.textMuted, display: "block", marginBottom: 8 }}>Model</label>
+                        <select value={hardwareSelections.closer || doorType.recommendedCloser || ""} onChange={e => handleHardwareChange("closer", e.target.value)}
+                          style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
+                          onFocus={e => e.target.style.borderColor = T.blue}
+                          onBlur={e => e.target.style.borderColor = T.border}
+                        >
+                          <option value="">Select Closer</option>
+                          {hardwareData.hardware.doorClosers.map(c => (
+                            <option key={c.id} value={c.id}>{c.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: T.textMuted, display: "block", marginBottom: 8 }}>Variant</label>
+                        <select value={hardwareSelections.closerVariant || ""} onChange={e => handleHardwareChange("closerVariant", e.target.value)}
+                          style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
+                          onFocus={e => e.target.style.borderColor = T.blue}
+                          onBlur={e => e.target.style.borderColor = T.border}
+                        >
+                          <option value="">Select Variant</option>
+                          {hardwareSelections.closer && hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer)?.variants.map(v => (
+                            <option key={v.id} value={v.id}>{v.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lever Handles */}
+                  <div style={{ marginBottom: 32 }}>
+                    <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Lever Handles</label>
+                    <select value={hardwareSelections.leverHandle || ""} onChange={e => handleHardwareChange("leverHandle", e.target.value)}
                       style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
                       onFocus={e => e.target.style.borderColor = T.blue}
                       onBlur={e => e.target.style.borderColor = T.border}
                     >
-                      <option value="">Select Variant</option>
-                      {hardwareSelections.closer && hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer)?.variants.map(v => (
-                        <option key={v.id} value={v.id}>{v.label}</option>
+                      <option value="">Select Lever Handle</option>
+                      {hardwareData.hardware.leverHandles.map(h => (
+                        <option key={h.id} value={h.id}>{h.label}</option>
                       ))}
                     </select>
                   </div>
-                </div>
-              </div>
 
-              {/* Lever Handles */}
-              <div style={{ marginBottom: 32 }}>
-                <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Lever Handles</label>
-                <select value={hardwareSelections.leverHandle || ""} onChange={e => handleHardwareChange("leverHandle", e.target.value)}
-                  style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
-                  onFocus={e => e.target.style.borderColor = T.blue}
-                  onBlur={e => e.target.style.borderColor = T.border}
-                >
-                  <option value="">Select Lever Handle</option>
-                  {hardwareData.hardware.leverHandles.map(h => (
-                    <option key={h.id} value={h.id}>{h.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Panic Hardware (if applicable) */}
-              {(doorType.id === "fire-door" || doorType.id === "manual-swing-accessible") && (
-                <div style={{ marginBottom: 32 }}>
-                  <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Panic Hardware</label>
-                  <select value={hardwareSelections.panicHardware || ""} onChange={e => handleHardwareChange("panicHardware", e.target.value)}
-                    style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
-                    onFocus={e => e.target.style.borderColor = T.blue}
-                    onBlur={e => e.target.style.borderColor = T.border}
-                  >
-                    <option value="">Select Panic Hardware</option>
-                    {hardwareData.hardware.panicHardware.map(p => (
-                      <option key={p.id} value={p.id}>{p.label}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Panic Hardware (if applicable) */}
+                  {(doorType.id === "fire-door" || doorType.id === "manual-swing-accessible") && (
+                    <div style={{ marginBottom: 32 }}>
+                      <label style={{ fontSize: 14, fontWeight: 600, color: T.textPrimary, display: "block", marginBottom: 12 }}>Panic Hardware</label>
+                      <select value={hardwareSelections.panicHardware || ""} onChange={e => handleHardwareChange("panicHardware", e.target.value)}
+                        style={{ width: "100%", background: T.surface, border: `1.5px solid ${T.border}`, borderRadius: 8, padding: "11px 14px", fontSize: 14, color: T.textPrimary, outline: "none", boxSizing: "border-box", fontFamily: "DM Sans, sans-serif", transition: "border-color 150ms" }}
+                        onFocus={e => e.target.style.borderColor = T.blue}
+                        onBlur={e => e.target.style.borderColor = T.border}
+                      >
+                        <option value="">Select Panic Hardware</option>
+                        {hardwareData.hardware.panicHardware.map(p => (
+                          <option key={p.id} value={p.id}>{p.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -350,9 +419,30 @@ export default function SpecGenerator() {
               <p style={{ color: T.textBody, marginBottom: 16 }}>{doorType.label} — {doorType.description}</p>
               <h2 style={{ fontSize: 18, fontWeight: 600, color: T.textPrimary, marginBottom: 16 }}>Hardware Schedule</h2>
               <ul style={{ color: T.textBody, marginBottom: 16 }}>
-                {hardwareSelections.closer && <li>Door Closer: {hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer)?.label} {hardwareSelections.closerVariant && `(${hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer)?.variants.find(v => v.id === hardwareSelections.closerVariant)?.label})`}</li>}
-                {hardwareSelections.leverHandle && <li>Lever Handle: {hardwareData.hardware.leverHandles.find(h => h.id === hardwareSelections.leverHandle)?.label}</li>}
-                {hardwareSelections.panicHardware && <li>Panic Hardware: {hardwareData.hardware.panicHardware.find(p => p.id === hardwareSelections.panicHardware)?.label}</li>}
+                {doorType.id === "automatic-sliding" ? (
+                  <>
+                    {hardwareSelections.glazingOption && (
+                      <li>Glazing Option: {doorType.glazingOptions?.find(g => g.id === hardwareSelections.glazingOption)?.label}</li>
+                    )}
+                    {hardwareSelections.leanaOptions && hardwareSelections.leanaOptions.length > 0 && (
+                      <li>
+                        Options:
+                        <ul>
+                          {hardwareSelections.leanaOptions.map(optId => {
+                            const opt = doorType.options?.find(o => o.id === optId);
+                            return <li key={optId}>{opt?.label}</li>;
+                          })}
+                        </ul>
+                      </li>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {hardwareSelections.closer && <li>Door Closer: {hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer)?.label} {hardwareSelections.closerVariant && `(${hardwareData.hardware.doorClosers.find(c => c.id === hardwareSelections.closer)?.variants.find(v => v.id === hardwareSelections.closerVariant)?.label})`}</li>}
+                    {hardwareSelections.leverHandle && <li>Lever Handle: {hardwareData.hardware.leverHandles.find(h => h.id === hardwareSelections.leverHandle)?.label}</li>}
+                    {hardwareSelections.panicHardware && <li>Panic Hardware: {hardwareData.hardware.panicHardware.find(p => p.id === hardwareSelections.panicHardware)?.label}</li>}
+                  </>
+                )}
               </ul>
               <h2 style={{ fontSize: 18, fontWeight: 600, color: T.textPrimary, marginBottom: 16 }}>Applicable EN Standards</h2>
               <ul style={{ color: T.textBody }}>
