@@ -1,7 +1,7 @@
 'use client'
 import { useState, useCallback } from "react";
 import { jsPDF } from "jspdf";
-import DoorIllustrations from "./DoorIllustrations";
+import { AutomaticSlidingDoor, ManualSwingDoor, AccessibleDoor, FireDoor } from "./DoorIllustrations";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const T = {
@@ -243,17 +243,27 @@ export default function SpecGenerator() {
             <p style={{ color: T.textMuted, fontSize: 15, marginBottom: 32 }}>Choose the door type you are generating a specification for.</p>
           
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-              {hardwareData.doorTypes.map(dt => (
-                <div key={dt.id} onClick={() => handleSelectDoorType(dt.id)}
-                  style={{ background: T.surface, border: `2px solid ${selectedDoorType === dt.id ? T.blue : T.border}`, borderRadius: 14, padding: 24, cursor: "pointer", transition: "all 200ms", boxShadow: selectedDoorType === dt.id ? `0 0 0 4px rgba(20,112,177,0.12), ${shadow.md}` : shadow.sm }}>
-                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
-                    <DoorIllustrations doorTypeId={dt.id} />
+              {hardwareData.doorTypes.map(dt => {
+                const IllustrationComponents = {
+                  "automatic-sliding": AutomaticSlidingDoor,
+                  "manual-swing-standard": ManualSwingDoor,
+                  "manual-swing-accessible": AccessibleDoor,
+                  "fire-door": FireDoor,
+                };
+                const Illustration = IllustrationComponents[dt.id] || ManualSwingDoor;
+
+                return (
+                  <div key={dt.id} onClick={() => handleSelectDoorType(dt.id)}
+                    style={{ background: T.surface, border: `2px solid ${selectedDoorType === dt.id ? T.blue : T.border}`, borderRadius: 14, padding: 24, cursor: "pointer", transition: "all 200ms", boxShadow: selectedDoorType === dt.id ? `0 0 0 4px rgba(20,112,177,0.12), ${shadow.md}` : shadow.sm }}>
+                    <div style={{ width: "100%", marginBottom: 18 }}>
+                      <Illustration />
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.02em", marginBottom: 4 }}>{dt.label}</div>
+                    <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 12 }}>{dt.description}</div>
+                    <div style={{ fontSize: 12, color: T.textFaint }}>{dt.manufacturer}</div>
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.02em", marginBottom: 4 }}>{dt.label}</div>
-                  <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 12 }}>{dt.description}</div>
-                  <div style={{ fontSize: 12, color: T.textFaint }}>{dt.manufacturer}</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
