@@ -227,7 +227,7 @@ body {
   .mf-app-header { padding: 0 16px !important; }
   .mf-app-header .mf-header-inner { padding: 0; flex-wrap: wrap; gap: 10px; align-items: center; }
   .mf-app-header .mf-header-row { flex-wrap: nowrap; align-items: center; gap: 10px; min-width: 0; }
-  .mf-app-header .mf-header-title { font-size: 13px; white-space: nowrap; }
+  .mf-app-header .mf-header-title { display: none; font-size: 13px; white-space: nowrap; }
   .mf-app-header .mf-header-subtitle { display: none; }
   .mf-step-indicator { overflow-x: hidden; }
   .mf-step-item { min-width: 0; flex: 1 1 0; }
