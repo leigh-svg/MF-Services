@@ -252,7 +252,7 @@ function ValidationPanel({ validation }) {
 }
 
 // ─── STEP INDICATOR ───────────────────────────────────────────────────────────
-const STEPS = ["Select System", "Configure Components", "Project Details", "Review"];
+const STEPS = ["Select", "Configure", "Project", "Review"];
 
 function StepIndicator({ currentStep, setCurrentStep }) {
   return (
@@ -270,7 +270,7 @@ function StepIndicator({ currentStep, setCurrentStep }) {
             }}>
               {i < currentStep ? "✓" : i + 1}
             </div>
-            <span className="mf-step-label" style={{ fontSize: 12, fontWeight: i === currentStep ? 600 : 400, color: i === currentStep ? T.textPrimary : T.textMuted, whiteSpace: "nowrap" }}>{label}</span>
+            <span className="mf-step-label" style={{ fontWeight: i === currentStep ? 600 : 400, color: i === currentStep ? T.textPrimary : T.textMuted, whiteSpace: "nowrap" }}>{label}</span>
           </div>
           {i < STEPS.length - 1 && (
             <div className="mf-step-connector" style={{ flex: 1, height: 2, margin: "0 12px", background: i < currentStep ? T.green : T.border, borderRadius: 1, transition: "background 250ms" }} />
