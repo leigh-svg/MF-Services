@@ -336,6 +336,11 @@ export default function CablePlanConfigurator() {
               {Object.values(SYSTEMS).map(sys => (
                 <div key={sys.id} onClick={() => handleSelectSystem(sys.id)}
                   style={{ background: T.surface, border: `2px solid ${selectedSystemId === sys.id ? T.blue : T.border}`, borderRadius: 14, padding: 24, cursor: "pointer", transition: "all 200ms", boxShadow: selectedSystemId === sys.id ? `0 0 0 4px rgba(20,112,177,0.12), ${shadow.md}` : shadow.sm }}>
+                  {sys.id === "ets64r-single" && (
+                    <div style={{ marginBottom: 16 }}>
+                      <ETS64RDiagram system={sys} componentStates={{}} />
+                    </div>
+                  )}
                   <div style={{ fontSize: 22, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.02em", marginBottom: 4 }}>{sys.name}</div>
                   <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 12 }}>{sys.leafType}</div>
                   {sys.isFireDoor && <div style={{ display: "inline-block", background: T.orangeLight, color: T.orange, border: `1px solid #FCD9B0`, borderRadius: 6, padding: "3px 10px", fontSize: 12, fontWeight: 600, marginBottom: 10 }}>🔥 Fire Door</div>}
@@ -361,9 +366,6 @@ export default function CablePlanConfigurator() {
             {/* Bento grid */}
              <div style={{ marginBottom: 28 }}>
   <WiringDiagram system={system} componentStates={componentStates} />
-</div>
-            <div style={{ marginBottom: 28 }}>
-  <ETS64RDiagram system={system} componentStates={componentStates} />
 </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               {system.components.map((comp, i) => (
