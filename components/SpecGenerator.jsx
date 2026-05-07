@@ -1,6 +1,7 @@
 'use client'
 import { useState, useCallback } from "react";
 import { jsPDF } from "jspdf";
+import DoorIllustrations from "./DoorIllustrations";
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
 const T = {
@@ -245,6 +246,9 @@ export default function SpecGenerator() {
               {hardwareData.doorTypes.map(dt => (
                 <div key={dt.id} onClick={() => handleSelectDoorType(dt.id)}
                   style={{ background: T.surface, border: `2px solid ${selectedDoorType === dt.id ? T.blue : T.border}`, borderRadius: 14, padding: 24, cursor: "pointer", transition: "all 200ms", boxShadow: selectedDoorType === dt.id ? `0 0 0 4px rgba(20,112,177,0.12), ${shadow.md}` : shadow.sm }}>
+                  <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+                    <DoorIllustrations doorTypeId={dt.id} />
+                  </div>
                   <div style={{ fontSize: 18, fontWeight: 700, color: T.textPrimary, letterSpacing: "-0.02em", marginBottom: 4 }}>{dt.label}</div>
                   <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 12 }}>{dt.description}</div>
                   <div style={{ fontSize: 12, color: T.textFaint }}>{dt.manufacturer}</div>
